@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DriftWatch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a0a;--surface:#141414;--surface-raised:#1a1a1a;--border:#282828;--border-active:#383838;--text:#e8e8e8;--text-dim:#888;--text-dimmer:#555;--accent:#0f8;--accent-dim:#0c6;--accent-glow:rgba(0,255,136,.15);--new:#0f8;--removed:#f44;--warning:#fa0;--mono:'Fira Code',monospace;--sans:'Inter',system-ui,sans-serif}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh}
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:1rem 1.5rem;position:sticky;top:0;z-index:100;backdrop-filter:blur(10px)}
+.header-content{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:.75rem}
+.logo-icon{width:28px;height:28px;background:linear-gradient(135deg,var(--accent),var(--accent-dim));border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1rem;color:var(--bg)}
+.logo-text{font-family:var(--mono);font-size:1.1rem;font-weight:600;letter-spacing:-.5px}
+.status-badge{padding:.25rem .75rem;background:var(--surface-raised);border:1px solid var(--border);border-radius:4px;font-family:var(--mono);font-size:.75rem;color:var(--text-dim);display:flex;align-items:center;gap:.5rem}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.container{max-width:1200px;margin:0 auto;padding:2rem 1.5rem}
+.scan-section{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.5rem;margin-bottom:1.5rem}
+.input-group{display:grid;grid-template-columns:1fr auto;gap:.75rem;margin-bottom:1rem}
+.input-wrapper{position:relative}
+.input-icon{position:absolute;left:1rem;top:50%;transform:translateY(-50%);color:var(--text-dimmer);pointer-events:none}
+.input{width:100%;padding:.875rem 1rem .875rem 2.75rem;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:.875rem;transition:all .2s}
+.input:focus{outline:0;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+.input::placeholder{color:var(--text-dimmer)}
+.btn{padding:.875rem 2rem;background:var(--accent);border:0;border-radius:6px;color:var(--bg);font-weight:600;font-size:.875rem;cursor:pointer;transition:all .2s;white-space:nowrap;display:flex;align-items:center;gap:.5rem;font-family:var(--sans)}
+.btn:hover:not(:disabled){background:var(--accent-dim);transform:translateY(-1px);box-shadow:0 4px 12px var(--accent-glow)}
+.btn:disabled{background:var(--border);color:var(--text-dimmer);cursor:not-allowed;transform:none}
+.options-toggle{color:var(--text-dim);font-size:.8rem;cursor:pointer;display:inline-flex;align-items:center;gap:.5rem;padding:.5rem 0;transition:color .2s}
+.options-toggle:hover{color:var(--text)}
+.options-panel{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-top:1rem;padding:1rem;background:var(--bg);border:1px solid var(--border);border-radius:6px}
+.options-panel.hidden{display:none}
+.option-item{display:flex;flex-direction:column;gap:.4rem}
+.option-label{font-size:.75rem;color:var(--text-dim);font-weight:500}
+.option-input{padding:.5rem .75rem;background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:var(--mono);font-size:.8rem}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem}
+.stat-card{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:1rem;text-align:center}
+.stat-label{font-size:.7rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.5rem}
+.stat-value{font-family:var(--mono);font-size:1.75rem;font-weight:600;color:var(--accent)}
+.stat-value.warning{color:var(--warning)}
+.stat-hash{font-family:var(--mono);font-size:.7rem;color:var(--text-dimmer);margin-top:.5rem;word-break:break-all}
+.results-section{margin-top:1.5rem}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.section-title{font-size:.9rem;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:.75rem}
+.count-badge{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;padding:0 .75rem;background:var(--accent);color:var(--bg);border-radius:14px;font-size:.75rem;font-weight:700;font-family:var(--mono)}
+.count-badge.removed{background:var(--removed)}
+.filter-group{display:flex;gap:.5rem}
+.filter-btn{padding:.4rem .875rem;background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text-dim);font-size:.75rem;font-weight:500;cursor:pointer;transition:all .2s;text-transform:uppercase;letter-spacing:.3px}
+.filter-btn:hover{border-color:var(--border-active);color:var(--text)}
+.filter-btn.active{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+.endpoint-list{display:flex;flex-direction:column;gap:.5rem}
+.endpoint-item{padding:.875rem 1rem;background:var(--surface);border:1px solid var(--border);border-left:3px solid transparent;border-radius:6px;font-family:var(--mono);font-size:.85rem;transition:all .2s;animation:slideIn .3s ease}
+@keyframes slideIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+.endpoint-item.new{border-left-color:var(--new);background:linear-gradient(90deg,rgba(0,255,136,.05),transparent)}
+.endpoint-item.removed{border-left-color:var(--removed);background:linear-gradient(90deg,rgba(255,68,68,.05),transparent);opacity:.6}
+.endpoint-item:hover{background:var(--surface-raised);border-color:var(--border-active)}
+.history-section{margin-top:2rem;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.5rem}
+.history-list{display:flex;flex-direction:column;gap:.5rem;margin-top:1rem}
+.history-item{padding:.875rem 1rem;background:var(--bg);border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:all .2s;display:flex;justify-content:space-between;align-items:center}
+.history-item:hover{background:var(--surface-raised);border-color:var(--border-active)}
+.history-url{font-family:var(--mono);font-size:.85rem;color:var(--text)}
+.history-meta{display:flex;gap:1rem;font-size:.75rem;color:var(--text-dim)}
+.history-time{font-family:var(--mono)}
+.history-count{font-family:var(--mono);color:var(--accent)}
+.empty-state{text-align:center;padding:3rem 1rem;color:var(--text-dim)}
+.empty-icon{font-size:3rem;margin-bottom:1rem;opacity:.3}
+.empty-text{font-size:.9rem}
+.loading{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--bg);border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:2rem;right:2rem;padding:1rem 1.5rem;background:var(--surface-raised);border:1px solid var(--border);border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,.5);display:flex;align-items:center;gap:.75rem;transform:translateY(120%);opacity:0;transition:all .3s ease;z-index:1000}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.error{border-color:var(--removed)}
+.toast-icon{font-size:1.25rem}
+.toast-message{font-size:.875rem;color:var(--text)}
+@media(max-width:768px){
+.input-group{grid-template-columns:1fr}
+.stats-grid{grid-template-columns:1fr 1fr}
+.options-panel{grid-template-columns:1fr}
+.filter-group{flex-wrap:wrap}
+.history-meta{flex-direction:column;gap:.25rem}
+}
+</style>
+</head>
+<body>
+<div class="header">
+<div class="header-content">
+<div class="logo">
+<div class="logo-icon">D</div>
+<div class="logo-text">DriftWatch</div>
+</div>
+<div class="status-badge">
+<div class="status-dot"></div>
+<span>Ready</span>
+</div>
+</div>
+</div>
+<div class="container">
+<div class="scan-section">
+<div class="input-group">
+<div class="input-wrapper">
+<svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+<path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+</svg>
+<input type="text" class="input" id="target-url" placeholder="https://example.com" value="https://example.com">
+</div>
+<button class="btn" id="scan-btn"><span>Scan</span></button>
+</div>
+<div class="options-toggle" id="options-toggle">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+<circle cx="12" cy="12" r="3"/>
+<path d="M12 1v6m0 6v6M5.6 5.6l4.2 4.2m4.2 4.2l4.2 4.2M1 12h6m6 0h6M5.6 18.4l4.2-4.2m4.2-4.2l4.2-4.2"/>
+</svg>
+<span>Advanced Options</span>
+</div>
+<div class="options-panel hidden" id="options-panel">
+<div class="option-item">
+<div class="option-label">Max JS Files</div>
+<input type="number" class="option-input" id="max-js" value="30" min="1" max="100">
+</div>
+<div class="option-item">
+<div class="option-label">Timeout (ms)</div>
+<input type="number" class="option-input" id="timeout" value="10000" min="1000" max="30000" step="1000">
+</div>
+<div class="option-item">
+<div class="option-label">Concurrency</div>
+<input type="number" class="option-input" id="concurrency" value="8" min="1" max="20">
+</div>
+<div class="option-item">
+<div class="option-label">Same Domain Only</div>
+<select class="option-input" id="same-domain">
+<option value="true">Yes</option>
+<option value="false">No</option>
+</select>
+</div>
+</div>
+</div>
+<div id="stats-section" style="display:none">
+<div class="stats-grid">
+<div class="stat-card">
+<div class="stat-label">Previous</div>
+<div class="stat-value" id="stat-previous">0</div>
+</div>
+<div class="stat-card">
+<div class="stat-label">Current</div>
+<div class="stat-value" id="stat-current">0</div>
+</div>
+<div class="stat-card">
+<div class="stat-label">New</div>
+<div class="stat-value" id="stat-new">0</div>
+</div>
+<div class="stat-card">
+<div class="stat-label">Removed</div>
+<div class="stat-value warning" id="stat-removed">0</div>
+</div>
+<div class="stat-card" style="grid-column:span 2">
+<div class="stat-label">Snapshot Hash</div>
+<div class="stat-hash" id="stat-hash">—</div>
+</div>
+</div>
+</div>
+<div class="results-section" id="results-section" style="display:none">
+<div id="new-section">
+<div class="section-header">
+<div class="section-title">🆕 New Endpoints<span class="count-badge" id="new-count">0</span></div>
+<div class="filter-group">
+<button class="filter-btn active" data-filter="all">All</button>
+<button class="filter-btn" data-filter="new">New</button>
+<button class="filter-btn" data-filter="removed">Removed</button>
+</div>
+</div>
+<div class="endpoint-list" id="endpoint-list"></div>
+</div>
+<div class="empty-state" id="empty-state" style="display:none">
+<div class="empty-icon">✓</div>
+<div class="empty-text">No new endpoints found</div>
+</div>
+</div>
+<div class="history-section" id="history-section" style="display:none">
+<div class="section-title">Scan History</div>
+<div class="history-list" id="history-list"></div>
+</div>
+</div>
+<div class="toast" id="toast">
+<div class="toast-icon">ℹ️</div>
+<div class="toast-message" id="toast-message"></div>
+</div>
+<script>
+let currentFilter='all',currentEndpoints=[];const targetUrl=document.getElementById('target-url'),scanBtn=document.getElementById('scan-btn'),optionsToggle=document.getElementById('options-toggle'),optionsPanel=document.getElementById('options-panel'),statsSection=document.getElementById('stats-section'),resultsSection=document.getElementById('results-section'),historySection=document.getElementById('history-section'),endpointList=document.getElementById('endpoint-list'),emptyState=document.getElementById('empty-state'),historyList=document.getElementById('history-list'),toast=document.getElementById('toast'),toastMessage=document.getElementById('toast-message');optionsToggle.addEventListener('click',()=>optionsPanel.classList.toggle('hidden'));document.querySelectorAll('.filter-btn').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');currentFilter=btn.dataset.filter;renderEndpoints(currentEndpoints)}));scanBtn.addEventListener('click',async()=>{const url=targetUrl.value.trim();if(!url){showToast('Please enter a URL','error');return}scanBtn.disabled=true;scanBtn.innerHTML='<span class="loading"></span><span>Scanning...</span>';try{const response=await fetch('/api/scan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({target_url:url,same_domain_only:document.getElementById('same-domain').value==='true',max_js:parseInt(document.getElementById('max-js').value),timeout_ms:parseInt(document.getElementById('timeout').value),concurrency:parseInt(document.getElementById('concurrency').value)})});if(!response.ok){const error=await response.json();throw new Error(error.detail||'Scan failed')}const data=await response.json();displayResults(data);loadHistory();showToast('Scan completed successfully','success')}catch(error){console.error('Scan error:',error);showToast(error.message||'Scan failed','error')}finally{scanBtn.disabled=false;scanBtn.innerHTML='<span>Scan</span>'}});function displayResults(data){currentEndpoints=data.findings.endpoints;document.getElementById('stat-previous').textContent=data.previous_count;document.getElementById('stat-current').textContent=data.endpoint_count;const newCount=currentEndpoints.filter(e=>e.is_new).length,removedCount=currentEndpoints.filter(e=>e.is_removed).length;document.getElementById('stat-new').textContent=newCount;document.getElementById('stat-removed').textContent=removedCount;document.getElementById('stat-hash').textContent=data.snapshot_hash;statsSection.style.display='block';resultsSection.style.display='block';document.getElementById('new-count').textContent=newCount;renderEndpoints(currentEndpoints)}function renderEndpoints(endpoints){let filtered=endpoints;if(currentFilter==='new')filtered=endpoints.filter(e=>e.is_new);else if(currentFilter==='removed')filtered=endpoints.filter(e=>e.is_removed);if(filtered.length===0){endpointList.style.display='none';emptyState.style.display='block';return}endpointList.style.display='flex';emptyState.style.display='none';endpointList.innerHTML=filtered.map(e=>{const className=e.is_new?'new':e.is_removed?'removed':'';return`<div class="endpoint-item ${className}">${e.value}</div>`}).join('')}async function loadHistory(){try{const response=await fetch('/api/snapshots?limit=10'),data=await response.json();if(data.items&&data.items.length>0){historySection.style.display='block';historyList.innerHTML=data.items.map(item=>`<div class="history-item" onclick="loadSnapshot('${item.snapshot_id}')"><div class="history-url">${item.target_url}</div><div class="history-meta"><div class="history-time">${new Date(item.created_at*1000).toLocaleString()}</div><div class="history-count">${item.endpoint_count} endpoints</div></div></div>`).join('')}}catch(error){console.error('Failed to load history:',error)}}async function loadSnapshot(id){try{const response=await fetch(`/api/snapshots/${id}`),data=await response.json();displayResults(data);targetUrl.value=data.target_url;showToast('Snapshot loaded','success')}catch(error){showToast('Failed to load snapshot','error')}}function showToast(message,type='info'){toastMessage.textContent=message;toast.className='toast show';if(type==='error')toast.classList.add('error');setTimeout(()=>toast.classList.remove('show'),3000)}loadHistory()
+</script>
+</body>
+</html>
