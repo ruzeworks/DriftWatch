@@ -85,7 +85,6 @@ class DriftWatchState:
         self._dirty = asyncio.Event()
         self._is_running = True
         
-        # [수정됨] SSRFSafeBackend 제거 및 기본 transport 사용
         limits = httpx.Limits(max_connections=MAX_CONCURRENCY, max_keepalive_connections=MAX_CONCURRENCY)
         transport = httpx.AsyncHTTPTransport(limits=limits, http2=True)
         self.client = httpx.AsyncClient(transport=transport, headers={'User-Agent': 'Mozilla/5.0 DriftWatch/Final'})
@@ -389,4 +388,5 @@ async def api_get_snapshot(snapshot_id: str):
     raise HTTPException(status_code=404, detail="Snapshot not found")
 
 if __name__ == "__main__":
+
     uvicorn.run(app, host="0.0.0.0", port=8000)
