@@ -217,7 +217,6 @@ class ParserEngine:
                 buffer = overlap + chunk
                 for match in REGEX_SCRIPT_BYTES.finditer(buffer):
                     full_url = urljoin(final_url, match.group(1).decode('utf-8', errors='ignore'))
-                    # strict same-domain check
                     if same_domain and not urlparse(full_url).netloc.endswith(base_domain):
                         continue
                         
@@ -236,7 +235,6 @@ class ParserEngine:
         try:
             async with AsyncNetworkEngine.safe_stream(url, timeout) as (resp, _):
                 ctype = resp.headers.get('content-type', '').lower()
-                # loose mime check
                 if 'javascript' not in ctype and 'ecmascript' not in ctype:
                     return endpoints
 
@@ -390,3 +388,4 @@ async def api_get_snapshot(snapshot_id: str):
 if __name__ == "__main__":
 
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
